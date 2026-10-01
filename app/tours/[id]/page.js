@@ -8,8 +8,9 @@ export function generateStaticParams() {
   }));
 }
 
-export default function TourDetailPage({ params }) {
-  const tour = tours.find((t) => t.id === parseInt(params.id));
+export default async function TourDetailPage({ params }) {
+  const { id } = await params;
+  const tour = tours.find((t) => t.id === parseInt(id));
 
   if (!tour) {
     return (
