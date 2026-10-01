@@ -41,6 +41,18 @@ export default function TourCard({ tour }) {
           <span className="flex items-center gap-1">👥 {tour.groupSize}</span>
         </div>
 
+        {/* Next Date & Spots */}
+        <div className="flex items-center gap-3 mb-3">
+          <span className="bg-accent-50 text-accent-700 px-3 py-1 rounded-full text-xs font-semibold">
+            📅 {tour.nextDate}
+          </span>
+          {tour.spotsLeft <= 5 && (
+            <span className="bg-red-50 text-red-600 px-3 py-1 rounded-full text-xs font-semibold animate-pulse">
+              🔥 Only {tour.spotsLeft} spots left!
+            </span>
+          )}
+        </div>
+
         <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-2">
           {tour.description}
         </p>

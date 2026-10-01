@@ -133,6 +133,17 @@ export default function TourDetailPage({ params }) {
                   <div className="text-sm text-gray-500">per person</div>
                 </div>
 
+                {/* Next Date */}
+                <div className="bg-accent-50 rounded-xl p-4 mb-4 text-center">
+                  <div className="text-sm text-accent-600 font-semibold">📅 Next Available Date</div>
+                  <div className="font-display font-bold text-accent-700 text-lg">{tour.nextDate}</div>
+                  {tour.spotsLeft <= 5 && (
+                    <div className="text-red-500 text-sm font-semibold mt-1 animate-pulse">
+                      🔥 Only {tour.spotsLeft} spots left!
+                    </div>
+                  )}
+                </div>
+
                 <div className="space-y-4 mb-6">
                   <div className="flex items-center justify-between py-3 border-b border-gray-100">
                     <span className="text-gray-600">Duration</span>
@@ -149,7 +160,7 @@ export default function TourDetailPage({ params }) {
                 </div>
 
                 <a
-                  href={`https://wa.me/919632690362?text=Hi! I'm interested in booking the ${tour.name} (₹${tour.price.toLocaleString()}). Please share availability.`}
+                  href={`https://wa.me/919632690362?text=Hi!%20I'm%20interested%20in%20booking%20the%20${encodeURIComponent(tour.name)}%20(${encodeURIComponent(tour.nextDate)})%20for%20₹${tour.price.toLocaleString()}.%20Please%20share%20availability.`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn-primary w-full block text-center"
