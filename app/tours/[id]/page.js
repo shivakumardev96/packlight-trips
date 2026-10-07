@@ -1,11 +1,27 @@
 import Link from 'next/link';
 import { tours } from '../../../data/tours';
 import TourCard from '../../../components/TourCard';
+import { cancellationPolicy } from '../../../data/config';
 
 export function generateStaticParams() {
   return tours.map((tour) => ({
     id: tour.id.toString(),
   }));
+}
+
+export async function generateMetadata({ params }) {
+  const { id } = await params;
+  const tour = tours.find((t) => t.id === parseInt(id));
+  if (!tour) return { title: 'Tour Not Found' };
+  return {
+    title: `${tour.name} - PackLight Trips`,
+    description: tour.description,
+    openGraph: {
+      title: tour.name,
+      description: tour.description,
+      images: [tour.image],
+    },
+  };
 }
 
 export default async function TourDetailPage({ params }) {
@@ -36,9 +52,10 @@ export default async function TourDetailPage({ params }) {
     <div className="pt-16 md:pt-20">
       {/* Hero Image */}
       <section className="relative h-[50vh] min-h-[400px] overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${tour.image})` }}
+        <img
+          src={tour.image}
+          alt={tour.name}
+          className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12">
@@ -75,12 +92,38 @@ export default async function TourDetailPage({ params }) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {tour.highlights.map((h, i) => (
                     <div key={i} className="flex items-center gap-3 bg-primary-50 rounded-xl p-4">
-                      <span className="text-primary-600 text-lg">✓</span>
+                      <span className="text-primary-600 text-lg" aria-hidden="true">✓</span>
                       <span className="text-gray-700 font-medium">{h}</span>
                     </div>
                   ))}
                 </div>
               </div>
+
+              {/* Day-by-day Itinerary */}
+              {tour.itinerary && (
+                <div>
+                  <h2 className="font-display text-2xl font-bold text-gray-900 mb-4">Day-by-day Itinerary</h2>
+                  <div className="space-y-4">
+                    {tour.itinerary.map((item, i) => (
+                      <div key={i} className="border-l-4 border-primary-500 pl-4">
+                        <h3 className="font-semibold text-gray-900">{item.day}: {item.title}</h3>
+                        <p className="text-gray-600 text-sm mt-1">{item.details}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Meeting Point */}
+              {tour.meetingPoint && (
+                <div>
+                  <h2 className="font-display text-2xl font-bold text-gray-900 mb-4">Meeting Point & Time</h2>
+                  <div className="bg-gray-50 rounded-xl p-6">
+                    <p className="text-gray-700"><strong>Meeting Point:</strong> {tour.meetingPoint}</p>
+                    {tour.meetingTime && <p className="text-gray-700 mt-2"><strong>Meeting Time:</strong> {tour.meetingTime}</p>}
+                  </div>
+                </div>
+              )}
 
               {/* Inclusions */}
               <div>
@@ -89,7 +132,7 @@ export default async function TourDetailPage({ params }) {
                   <ul className="space-y-3">
                     {tour.inclusions.map((item, i) => (
                       <li key={i} className="flex items-center gap-3">
-                        <span className="w-6 h-6 bg-primary-100 rounded-full flex items-center justify-center text-primary-600 text-sm flex-shrink-0">✓</span>
+                        <span className="w-6 h-6 bg-primary-100 rounded-full flex items-center justify-center text-primary-600 text-sm flex-shrink-0" aria-hidden="true">✓</span>
                         <span className="text-gray-700">{item}</span>
                       </li>
                     ))}
@@ -97,27 +140,84 @@ export default async function TourDetailPage({ params }) {
                 </div>
               </div>
 
+              {/* Not Included */}
+              {tour.notIncluded && (
+                <div>
+                  <h2 className="font-display text-2xl font-bold text-gray-900 mb-4">What is Not Included</h2>
+                  <div className="bg-red-50 rounded-2xl p-6">
+                    <ul className="space-y-3">
+                      {tour.notIncluded.map((item, i) => (
+                        <li key={i} className="flex items-center gap-3">
+                          <span className="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center text-red-600 text-sm flex-shrink-0" aria-hidden="true">✗</span>
+                          <span className="text-gray-700">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
+
+              {/* Things to Carry */}
+              {tour.thingsToCarry && (
+                <div>
+                  <h2 className="font-display text-2xl font-bold text-gray-900 mb-4">Things to Carry</h2>
+                  <div className="bg-blue-50 rounded-2xl p-6">
+                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {tour.thingsToCarry.map((item, i) => (
+                        <li key={i} className="flex items-center gap-2">
+                          <span className="text-blue-600" aria-hidden="true">•</span>
+                          <span className="text-gray-700">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
+
+              {/* Fitness Level */}
+              {tour.fitnessLevel && (
+                <div>
+                  <h2 className="font-display text-2xl font-bold text-gray-900 mb-4">Fitness Level Required</h2>
+                  <div className="bg-yellow-50 rounded-2xl p-6">
+                    <p className="text-gray-700">{tour.fitnessLevel}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Cancellation Summary */}
+              <div className="bg-gray-50 rounded-2xl p-6">
+                <h2 className="font-display text-xl font-bold text-gray-900 mb-3">Cancellation Policy</h2>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li>• Full refund if cancelled {cancellationPolicy.fullRefundDays}+ days before trip</li>
+                  <li>• {cancellationPolicy.partialRefundPercent}% refund if cancelled {cancellationPolicy.partialRefundDays}-{cancellationPolicy.fullRefundDays - 1} days before trip</li>
+                  <li>• No refund if cancelled less than {cancellationPolicy.noRefundDays} days before trip</li>
+                </ul>
+                <Link href="/cancellation" className="text-primary-600 hover:text-primary-700 font-medium text-sm mt-3 inline-block">
+                  Read full cancellation policy →
+                </Link>
+              </div>
+
               {/* Quick Info */}
               <div>
                 <h2 className="font-display text-2xl font-bold text-gray-900 mb-4">Quick Information</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="bg-gray-50 rounded-xl p-4 text-center">
-                    <div className="text-2xl mb-1">⏱️</div>
+                    <div className="text-2xl mb-1" aria-hidden="true">⏱️</div>
                     <div className="text-sm text-gray-500">Duration</div>
                     <div className="font-semibold text-gray-900">{tour.duration}</div>
                   </div>
                   <div className="bg-gray-50 rounded-xl p-4 text-center">
-                    <div className="text-2xl mb-1">👥</div>
+                    <div className="text-2xl mb-1" aria-hidden="true">👥</div>
                     <div className="text-sm text-gray-500">Group Size</div>
                     <div className="font-semibold text-gray-900">{tour.groupSize}</div>
                   </div>
                   <div className="bg-gray-50 rounded-xl p-4 text-center">
-                    <div className="text-2xl mb-1">📅</div>
+                    <div className="text-2xl mb-1" aria-hidden="true">📅</div>
                     <div className="text-sm text-gray-500">Best Season</div>
                     <div className="font-semibold text-gray-900 text-sm">{tour.bestSeason}</div>
                   </div>
                   <div className="bg-gray-50 rounded-xl p-4 text-center">
-                    <div className="text-2xl mb-1">⭐</div>
+                    <div className="text-2xl mb-1" aria-hidden="true">⭐</div>
                     <div className="text-sm text-gray-500">Rating</div>
                     <div className="font-semibold text-gray-900">{tour.rating} ({tour.reviews})</div>
                   </div>
@@ -138,7 +238,7 @@ export default async function TourDetailPage({ params }) {
                 <div className="bg-accent-50 rounded-xl p-4 mb-4 text-center">
                   <div className="text-sm text-accent-600 font-semibold">📅 Next Available Date</div>
                   <div className="font-display font-bold text-accent-700 text-lg">{tour.nextDate}</div>
-                  {tour.spotsLeft <= 5 && (
+                  {tour.spotsLeft && tour.spotsLeft <= 5 && (
                     <div className="text-red-500 text-sm font-semibold mt-1 animate-pulse">
                       🔥 Only {tour.spotsLeft} spots left!
                     </div>

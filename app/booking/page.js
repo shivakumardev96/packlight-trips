@@ -1,94 +1,18 @@
-'use client';
-
-import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import BookingForm from './BookingForm';
 import { tours } from '../../data/tours';
+import { siteConfig } from '../../data/config';
 
-function BookingForm() {
-  const searchParams = useSearchParams();
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    tourName: '',
-    tourDate: '',
-    participants: 1,
-    message: '',
-  });
-  const [status, setStatus] = useState({ type: '', message: '' });
-  const [loading, setLoading] = useState(false);
-  const [selectedTour, setSelectedTour] = useState(null);
+export const metadata = {
+  title: 'Book Your Trip - PackLight Trips',
+  description: 'Book your trekking, road trip, or adventure travel experience with PackLight Trips. Easy online booking with instant confirmation.',
+  openGraph: {
+    title: 'Book Your Trip - PackLight Trips',
+    description: 'Book your adventure travel experience with PackLight Trips.',
+    url: `${siteConfig.url}/booking`,
+  },
+};
 
-  useEffect(() => {
-    const tourName = searchParams.get('tour');
-    const date = searchParams.get('date');
-    if (tourName) {
-      setFormData((prev) => ({ ...prev, tourName, tourDate: date || '' }));
-      const tour = tours.find((t) => t.name === tourName);
-      setSelectedTour(tour);
-    }
-  }, [searchParams]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    if (name === 'tourName') {
-      const tour = tours.find((t) => t.name === value);
-      setSelectedTour(tour);
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setStatus({ type: '', message: '' });
-
-    try {
-      const res = await fetch('/api/bookings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        setStatus({ type: 'success', message: data.message });
-        setFormData({
-          name: '',
-          email: '',
-          phone: '',
-          tourName: '',
-          tourDate: '',
-          participants: 1,
-          message: '',
-        });
-      } else {
-        setStatus({ type: 'error', message: data.error || 'Something went wrong' });
-      }
-    } catch {
-      setStatus({ type: 'error', message: 'Network error. Please try again.' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePayment = () => {
-    if (!selectedTour) {
-      setStatus({ type: 'error', message: 'Please select a tour first' });
-      return;
-    }
-
-    const totalAmount = selectedTour.price * formData.participants;
-    const paymentUrl = `https://razorpay.me/@31807565?amount=${totalAmount}&name=${encodeURIComponent(formData.name)}&email=${encodeURIComponent(formData.email)}&contact=${encodeURIComponent(formData.phone)}&description=${encodeURIComponent(selectedTour.name)}`;
-
-    window.open(paymentUrl, '_blank');
-    setStatus({
-      type: 'info',
-      message: 'Opening payment page in a new tab. After payment, please submit the booking form below.',
-    });
-  };
-
+export default function BookingPage() {
   return (
     <div className="pt-20 md:pt-24 pb-16">
       <div className="max-w-3xl mx-auto px-4">
@@ -101,192 +25,27 @@ function BookingForm() {
           </p>
         </div>
 
-        {status.message && (
-          <div
-            className={`mb-6 p-4 rounded-xl text-center font-medium ${
-              status.type === 'success'
-                ? 'bg-green-50 text-green-700 border border-green-200'
-                : 'bg-red-50 text-red-700 border border-red-200'
-            }`}
+        {/* Server-rendered form shell */}
+        <div className="bg-white rounded-2xl shadow-lg p-8">
+          <BookingForm tours={tours} />
+        </div>
+
+        {/* Fallback contact */}
+        <div className="mt-8 text-center">
+          <p className="text-gray-600 mb-3">Having trouble with the form?</p>
+          <a
+            href={`https://wa.me/919632690362?text=Hi!%20I%20want%20to%20book%20a%20trip%20with%20PackLight%20Trips.`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-primary inline-block"
           >
-            {status.message}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg p-8 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Full Name *
-              </label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
-                placeholder="Your full name"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Phone Number *
-              </label>
-              <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
-                placeholder="+91 XXXXX XXXXX"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email Address
-            </label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
-              placeholder="your@email.com"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Select Tour *
-              </label>
-              <select
-                name="tourName"
-                value={formData.tourName}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
-              >
-                <option value="">Choose a tour</option>
-                {tours.map((tour) => (
-                  <option key={tour.id} value={tour.name}>
-                    {tour.name} - ₹{tour.price.toLocaleString()}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Preferred Date
-              </label>
-              <input
-                type="text"
-                name="tourDate"
-                value={formData.tourDate}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
-                placeholder="e.g., Nov 15-16, 2026"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Number of Participants
-            </label>
-            <select
-              name="participants"
-              value={formData.participants}
-              onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
-            >
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-                <option key={n} value={n}>
-                  {n} {n === 1 ? 'person' : 'people'}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Price Summary */}
-          {selectedTour && (
-            <div className="bg-primary-50 rounded-xl p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Total Amount</p>
-                  <p className="text-xs text-gray-500">
-                    ₹{selectedTour.price.toLocaleString()} × {formData.participants}{' '}
-                    {formData.participants === 1 ? 'person' : 'people'}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="font-display text-2xl font-bold text-primary-700">
-                    ₹{(selectedTour.price * formData.participants).toLocaleString()}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Additional Message
-            </label>
-            <textarea
-              name="message"
-              value={formData.message}
-              onChange={handleChange}
-              rows={4}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
-              placeholder="Any special requirements or questions..."
-            />
-          </div>
-
-          <div className="space-y-3">
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn-primary w-full text-lg disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Submitting...' : 'Submit Booking Request'}
-            </button>
-
-            {selectedTour && (
-              <button
-                type="button"
-                onClick={handlePayment}
-                disabled={loading}
-                className="w-full bg-accent-500 hover:bg-accent-600 text-white font-semibold py-3 px-8 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Processing...' : `Pay ₹${(selectedTour.price * formData.participants).toLocaleString()} Online`}
-              </button>
-            )}
-          </div>
-
-          <p className="text-center text-sm text-gray-500">
-            By submitting, you agree to be contacted by PackLight Trips via phone, email, or WhatsApp.
+            Book via WhatsApp
+          </a>
+          <p className="text-gray-500 text-sm mt-3">
+            or call us at <a href="tel:+919632690362" className="text-primary-600 hover:underline">{siteConfig.phone}</a>
           </p>
-        </form>
-      </div>
-    </div>
-  );
-}
-
-export default function BookingPage() {
-  return (
-    <Suspense fallback={
-      <div className="pt-20 min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl mb-4">⏳</div>
-          <p className="text-gray-600">Loading booking form...</p>
         </div>
       </div>
-    }>
-      <BookingForm />
-    </Suspense>
+    </div>
   );
 }

@@ -1,9 +1,26 @@
 import Link from 'next/link';
 import TourCard from '../components/TourCard';
-import { tours, testimonials } from '../data/tours';
+import { tours } from '../data/tours';
+import { testimonials } from '../data/testimonials';
+import { siteConfig, travelerCount, googleReviewsUrl } from '../data/config';
+
+export const metadata = {
+  title: 'PackLight Trips - Trekking, Road Trips & Adventure Travel from Bangalore',
+  description: 'PackLight Trips offers curated trekking expeditions, road trips, camping, and adventure sports experiences from Bangalore. Explore the Western Ghats and Himalayas with expert guides.',
+  openGraph: {
+    title: 'PackLight Trips - Adventure Travel from Bangalore',
+    description: 'Curated treks, road trips, and adventure experiences from Bangalore.',
+    url: siteConfig.url,
+    siteName: siteConfig.name,
+    type: 'website',
+  },
+};
 
 export default function Home() {
   const featuredTours = tours.slice(0, 6);
+  const totalReviews = tours.reduce((sum, t) => sum + t.reviews, 0);
+  const avgRating = (tours.reduce((sum, t) => sum + t.rating, 0) / tours.length).toFixed(1);
+  const destinations = new Set(tours.map((t) => t.location.split(',').pop().trim())).size;
 
   return (
     <div className="pt-16 md:pt-20">
@@ -44,19 +61,21 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             <div>
-              <div className="font-display text-3xl md:text-4xl font-bold text-primary-600">500+</div>
+              <div className="font-display text-3xl md:text-4xl font-bold text-primary-600">
+                {travelerCount ? `${travelerCount}+` : '500+'}
+              </div>
               <div className="text-gray-500 text-sm mt-1">Happy Travelers</div>
             </div>
             <div>
-              <div className="font-display text-3xl md:text-4xl font-bold text-primary-600">50+</div>
+              <div className="font-display text-3xl md:text-4xl font-bold text-primary-600">{tours.length}+</div>
               <div className="text-gray-500 text-sm mt-1">Curated Tours</div>
             </div>
             <div>
-              <div className="font-display text-3xl md:text-4xl font-bold text-primary-600">15+</div>
+              <div className="font-display text-3xl md:text-4xl font-bold text-primary-600">{destinations}+</div>
               <div className="text-gray-500 text-sm mt-1">Destinations</div>
             </div>
             <div>
-              <div className="font-display text-3xl md:text-4xl font-bold text-primary-600">4.8</div>
+              <div className="font-display text-3xl md:text-4xl font-bold text-primary-600">{avgRating}</div>
               <div className="text-gray-500 text-sm mt-1">Average Rating</div>
             </div>
           </div>
@@ -106,7 +125,7 @@ export default function Home() {
               { icon: '💰', title: 'Best Prices', desc: 'Transparent pricing with no hidden charges. Group discounts available.' },
             ].map((item, i) => (
               <div key={i} className="text-center p-6 rounded-2xl hover:bg-gray-50 transition-colors">
-                <div className="text-4xl mb-4">{item.icon}</div>
+                <div className="text-4xl mb-4" aria-hidden="true">{item.icon}</div>
                 <h3 className="font-display font-semibold text-lg text-gray-900 mb-2">{item.title}</h3>
                 <p className="text-gray-600 text-sm">{item.desc}</p>
               </div>
@@ -131,21 +150,36 @@ export default function Home() {
               <div key={t.id} className="bg-white rounded-2xl p-6 shadow-sm">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
-                    <span className="font-bold text-primary-700">{t.avatar}</span>
+                    <span className="font-bold text-primary-700">{t.name.split(' ').map(n => n[0]).join('')}</span>
                   </div>
                   <div>
                     <div className="font-semibold text-gray-900">{t.name}</div>
-                    <div className="text-gray-500 text-sm">{t.location}</div>
+                    <div className="text-gray-500 text-sm">{t.city}</div>
                   </div>
                 </div>
-                <div className="flex text-yellow-400 mb-3">
+                <div className="flex text-yellow-400 mb-3" aria-label={`${t.rating} out of 5 stars`}>
                   {'★'.repeat(t.rating)}
                 </div>
-                <p className="text-gray-600 text-sm leading-relaxed mb-3">"{t.text}"</p>
-                <div className="text-xs text-primary-600 font-medium">{t.tour}</div>
+                <p className="text-gray-600 text-sm leading-relaxed mb-3">&ldquo;{t.text}&rdquo;</p>
+                <div className="text-xs text-primary-600 font-medium">{t.trip}</div>
+                {t.isSample && (
+                  <div className="text-xs text-gray-400 mt-1 italic">Sample review</div>
+                )}
               </div>
             ))}
           </div>
+          {googleReviewsUrl && (
+            <div className="text-center mt-8">
+              <a
+                href={googleReviewsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary-600 hover:text-primary-700 font-medium"
+              >
+                Read more reviews on Google →
+              </a>
+            </div>
+          )}
         </div>
       </section>
 
@@ -161,7 +195,7 @@ export default function Home() {
             Ready for Your Next Adventure?
           </h2>
           <p className="text-lg text-white/90 mb-8">
-            Join 500+ happy travelers who have explored the mountains with us.
+            Join {travelerCount ? `${travelerCount}+` : '500+'} happy travelers who have explored the mountains with us.
             Your journey starts with a single step.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

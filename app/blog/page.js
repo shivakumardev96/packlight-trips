@@ -1,3 +1,8 @@
+export const metadata = {
+  title: 'Travel Blog - PackLight Trips',
+  description: 'Travel guides, trek tips, and adventure stories from PackLight Trips. Learn about the best treks, road trips, and camping destinations in India.',
+};
+
 const blogPosts = [
   {
     id: 1,

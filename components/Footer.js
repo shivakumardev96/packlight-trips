@@ -1,6 +1,14 @@
 import Link from 'next/link';
+import { socialLinks, siteConfig } from '../data/config';
 
 export default function Footer() {
+  const socials = [
+    { key: 'instagram', label: 'Instagram', short: 'IG', url: socialLinks.instagram },
+    { key: 'facebook', label: 'Facebook', short: 'FB', url: socialLinks.facebook },
+    { key: 'youtube', label: 'YouTube', short: 'YT', url: socialLinks.youtube },
+    { key: 'whatsapp', label: 'WhatsApp', short: 'WA', url: socialLinks.whatsapp },
+  ].filter((s) => s.url);
+
   return (
     <footer className="bg-gray-900 text-gray-300">
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-16">
@@ -20,18 +28,18 @@ export default function Footer() {
               Crafting unforgettable travel experiences across India. From Himalayan peaks to coastal escapes, we make adventure accessible to everyone.
             </p>
             <div className="flex gap-4 mt-6">
-              <a href="#" className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-primary-600 transition-colors">
-                <span className="text-sm">IG</span>
-              </a>
-              <a href="#" className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-primary-600 transition-colors">
-                <span className="text-sm">FB</span>
-              </a>
-              <a href="#" className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-primary-600 transition-colors">
-                <span className="text-sm">YT</span>
-              </a>
-              <a href="#" className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-primary-600 transition-colors">
-                <span className="text-sm">WA</span>
-              </a>
+              {socials.map((social) => (
+                <a
+                  key={social.key}
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={social.label}
+                  className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-primary-600 transition-colors"
+                >
+                  <span className="text-sm">{social.short}</span>
+                </a>
+              ))}
             </div>
           </div>
 
@@ -40,6 +48,7 @@ export default function Footer() {
             <h4 className="font-display font-semibold text-white mb-4">Quick Links</h4>
             <ul className="space-y-3">
               <li><Link href="/tours" className="text-gray-400 hover:text-white transition-colors text-sm">All Tours</Link></li>
+              <li><Link href="/booking" className="text-gray-400 hover:text-white transition-colors text-sm">Book Now</Link></li>
               <li><Link href="/about" className="text-gray-400 hover:text-white transition-colors text-sm">About Us</Link></li>
               <li><Link href="/blog" className="text-gray-400 hover:text-white transition-colors text-sm">Travel Blog</Link></li>
               <li><Link href="/faq" className="text-gray-400 hover:text-white transition-colors text-sm">FAQs</Link></li>
@@ -64,20 +73,20 @@ export default function Footer() {
             <h4 className="font-display font-semibold text-white mb-4">Contact Us</h4>
             <ul className="space-y-3 text-sm text-gray-400">
               <li className="flex items-start gap-2">
-                <span className="text-accent-400 mt-0.5">📍</span>
-                <span>Indiranagar, Bangalore, Karnataka 560038</span>
+                <span aria-hidden="true" className="text-accent-400 mt-0.5">📍</span>
+                <span>{siteConfig.address}</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-accent-400 mt-0.5">📞</span>
-                <span>+91 96326 90362</span>
+                <span aria-hidden="true" className="text-accent-400 mt-0.5">📞</span>
+                <span>{siteConfig.phone}</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-accent-400 mt-0.5">✉️</span>
-                <span>hello@packlighttrips.com</span>
+                <span aria-hidden="true" className="text-accent-400 mt-0.5">✉️</span>
+                <span>{siteConfig.email}</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-accent-400 mt-0.5">🕐</span>
-                <span>Mon-Sat: 9 AM - 7 PM</span>
+                <span aria-hidden="true" className="text-accent-400 mt-0.5">🕐</span>
+                <span>{siteConfig.hours}</span>
               </li>
             </ul>
           </div>
@@ -85,12 +94,12 @@ export default function Footer() {
 
         <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-gray-500 text-sm">
-            &copy; 2026 PackLight Trips. All rights reserved.
+            &copy; {new Date().getFullYear()} {siteConfig.name}. All rights reserved.
           </p>
           <div className="flex gap-6 text-sm text-gray-500">
-            <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-white transition-colors">Terms & Conditions</a>
-            <a href="#" className="hover:text-white transition-colors">Cancellation Policy</a>
+            <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-white transition-colors">Terms & Conditions</Link>
+            <Link href="/cancellation" className="hover:text-white transition-colors">Cancellation Policy</Link>
           </div>
         </div>
       </div>

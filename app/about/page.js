@@ -1,3 +1,8 @@
+export const metadata = {
+  title: 'About Us - PackLight Trips',
+  description: 'Learn about PackLight Trips, a Bangalore-based adventure travel company founded by passionate trekkers. Meet our team and discover our values.',
+};
+
 export default function AboutPage() {
   const team = [
     { name: 'Arjun Kumar', role: 'Founder & Lead Guide', avatar: 'AK', bio: 'Mountaineer with 15+ years of trekking experience across the Himalayas and Western Ghats.' },
