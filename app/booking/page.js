@@ -73,70 +73,20 @@ function BookingForm() {
     }
   };
 
-  const handlePayment = async () => {
+  const handlePayment = () => {
     if (!selectedTour) {
       setStatus({ type: 'error', message: 'Please select a tour first' });
       return;
     }
 
-    setLoading(true);
-    try {
-      const res = await fetch('/api/payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amount: selectedTour.price * formData.participants,
-          receipt: `booking_${Date.now()}`,
-          notes: {
-            name: formData.name,
-            phone: formData.phone,
-            tour: selectedTour.name,
-          },
-        }),
-      });
+    const totalAmount = selectedTour.price * formData.participants;
+    const paymentUrl = `https://razorpay.me/@31807565?amount=${totalAmount}&name=${encodeURIComponent(formData.name)}&email=${encodeURIComponent(formData.email)}&contact=${encodeURIComponent(formData.phone)}&description=${encodeURIComponent(selectedTour.name)}`;
 
-      const data = await res.json();
-
-      if (data.success) {
-        const script = document.createElement('script');
-        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-        script.onload = () => {
-          const options = {
-            key: data.keyId,
-            amount: data.amount,
-            currency: data.currency,
-            name: 'PackLight Trips',
-            description: selectedTour.name,
-            order_id: data.orderId,
-            handler: async function (response) {
-              setStatus({
-                type: 'success',
-                message: `Payment successful! Payment ID: ${response.razorpay_payment_id}`,
-              });
-            },
-            prefill: {
-              name: formData.name,
-              email: formData.email,
-              contact: formData.phone,
-            },
-            theme: {
-              color: '#16a34a',
-            },
-          };
-          const rzp = new window.Razorpay(options);
-          rzp.open();
-        };
-        document.body.appendChild(script);
-      } else if (data.fallback) {
-        setStatus({ type: 'info', message: data.error });
-      } else {
-        setStatus({ type: 'error', message: data.error || 'Payment failed' });
-      }
-    } catch {
-      setStatus({ type: 'error', message: 'Payment error. Please try again.' });
-    } finally {
-      setLoading(false);
-    }
+    window.open(paymentUrl, '_blank');
+    setStatus({
+      type: 'info',
+      message: 'Opening payment page in a new tab. After payment, please submit the booking form below.',
+    });
   };
 
   return (
