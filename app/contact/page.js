@@ -10,15 +10,39 @@ export default function ContactPage() {
     subject: '',
     message: '',
   });
-  const [submitted, setSubmitted] = useState(false);
+  const [status, setStatus] = useState({ type: '', message: '' });
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitted(true);
+    setLoading(true);
+    setStatus({ type: '', message: '' });
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setStatus({ type: 'success', message: data.message });
+        setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
+      } else {
+        setStatus({ type: 'error', message: data.error || 'Something went wrong' });
+      }
+    } catch {
+      setStatus({ type: 'error', message: 'Network error. Please try again.' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -110,98 +134,98 @@ export default function ContactPage() {
               <div className="bg-white rounded-2xl shadow-sm p-8">
                 <h2 className="font-display text-2xl font-bold text-gray-900 mb-6">Send Us a Message</h2>
 
-                {submitted ? (
-                  <div className="text-center py-12">
-                    <div className="text-6xl mb-4">✅</div>
-                    <h3 className="font-display text-xl font-bold text-gray-900 mb-2">Message Sent!</h3>
-                    <p className="text-gray-600 mb-6">
-                      Thank you for reaching out. We will get back to you within 24 hours.
-                    </p>
-                    <button
-                      onClick={() => { setSubmitted(false); setFormData({ name: '', email: '', phone: '', subject: '', message: '' }); }}
-                      className="btn-primary"
-                    >
-                      Send Another Message
-                    </button>
+                {status.message && (
+                  <div
+                    className={`mb-6 p-4 rounded-xl text-center font-medium ${
+                      status.type === 'success'
+                        ? 'bg-green-50 text-green-700 border border-green-200'
+                        : 'bg-red-50 text-red-700 border border-red-200'
+                    }`}
+                  >
+                    {status.message}
                   </div>
-                ) : (
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
-                        <input
-                          type="text"
-                          name="name"
-                          value={formData.name}
-                          onChange={handleChange}
-                          required
-                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                          placeholder="Your name"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-                        <input
-                          type="email"
-                          name="email"
-                          value={formData.email}
-                          onChange={handleChange}
-                          required
-                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                          placeholder="your@email.com"
-                        />
-                      </div>
-                    </div>
+                )}
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-                        <input
-                          type="tel"
-                          name="phone"
-                          value={formData.phone}
-                          onChange={handleChange}
-                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                          placeholder="+91 XXXXX XXXXX"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Subject *</label>
-                        <select
-                          name="subject"
-                          value={formData.subject}
-                          onChange={handleChange}
-                          required
-                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                        >
-                          <option value="">Select a subject</option>
-                          <option value="booking">Booking Inquiry</option>
-                          <option value="custom">Custom Trip Request</option>
-                          <option value="corporate">Corporate Trip</option>
-                          <option value="feedback">Feedback</option>
-                          <option value="other">Other</option>
-                        </select>
-                      </div>
-                    </div>
-
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Message *</label>
-                      <textarea
-                        name="message"
-                        value={formData.message}
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
+                      <input
+                        type="text"
+                        name="name"
+                        value={formData.name}
                         onChange={handleChange}
                         required
-                        rows={5}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
-                        placeholder="Tell us about your travel plans or ask any questions..."
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        placeholder="Your name"
                       />
                     </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        required
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        placeholder="your@email.com"
+                      />
+                    </div>
+                  </div>
 
-                    <button type="submit" className="btn-primary w-full md:w-auto">
-                      Send Message
-                    </button>
-                  </form>
-                )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        placeholder="+91 XXXXX XXXXX"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Subject *</label>
+                      <select
+                        name="subject"
+                        value={formData.subject}
+                        onChange={handleChange}
+                        required
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      >
+                        <option value="">Select a subject</option>
+                        <option value="booking">Booking Inquiry</option>
+                        <option value="custom">Custom Trip Request</option>
+                        <option value="corporate">Corporate Trip</option>
+                        <option value="feedback">Feedback</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Message *</label>
+                    <textarea
+                      name="message"
+                      value={formData.message}
+                      onChange={handleChange}
+                      required
+                      rows={5}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                      placeholder="Tell us about your travel plans or ask any questions..."
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="btn-primary w-full md:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? 'Sending...' : 'Send Message'}
+                  </button>
+                </form>
               </div>
             </div>
           </div>

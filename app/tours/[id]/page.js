@@ -160,18 +160,25 @@ export default async function TourDetailPage({ params }) {
                   </div>
                 </div>
 
+                <Link
+                  href={`/booking?tour=${encodeURIComponent(tour.name)}&date=${encodeURIComponent(tour.nextDate)}`}
+                  className="btn-primary w-full block text-center"
+                >
+                  Book This Trip
+                </Link>
+
                 <a
                   href={`https://wa.me/919632690362?text=Hi!%20I'm%20interested%20in%20booking%20the%20${encodeURIComponent(tour.name)}%20(${encodeURIComponent(tour.nextDate)})%20for%20₹${tour.price.toLocaleString()}.%20Please%20share%20availability.`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="btn-primary w-full block text-center"
+                  className="btn-secondary w-full block text-center mt-3"
                 >
                   Book via WhatsApp
                 </a>
 
-                <a href="/contact" className="btn-secondary w-full block text-center mt-3">
-                  Send Inquiry
-                </a>
+                <Link href="/contact" className="block text-center mt-3 text-sm text-gray-500 hover:text-primary-600 transition-colors">
+                  or send an inquiry instead
+                </Link>
 
                 <p className="text-center text-xs text-gray-500 mt-4">
                   No advance payment required to inquire

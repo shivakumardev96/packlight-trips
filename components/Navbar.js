@@ -9,6 +9,7 @@ export default function Navbar() {
   const navLinks = [
     { href: '/', label: 'Home' },
     { href: '/tours', label: 'Tours' },
+    { href: '/booking', label: 'Book Now' },
     { href: '/about', label: 'About' },
     { href: '/blog', label: 'Blog' },
     { href: '/faq', label: 'FAQ' },
