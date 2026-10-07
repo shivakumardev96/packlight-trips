@@ -1,9 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { tours } from '../../data/tours';
 
-export default function BookingPage() {
+function BookingForm() {
+  const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -15,10 +17,25 @@ export default function BookingPage() {
   });
   const [status, setStatus] = useState({ type: '', message: '' });
   const [loading, setLoading] = useState(false);
+  const [selectedTour, setSelectedTour] = useState(null);
+
+  useEffect(() => {
+    const tourName = searchParams.get('tour');
+    const date = searchParams.get('date');
+    if (tourName) {
+      setFormData((prev) => ({ ...prev, tourName, tourDate: date || '' }));
+      const tour = tours.find((t) => t.name === tourName);
+      setSelectedTour(tour);
+    }
+  }, [searchParams]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === 'tourName') {
+      const tour = tours.find((t) => t.name === value);
+      setSelectedTour(tour);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -51,6 +68,70 @@ export default function BookingPage() {
       }
     } catch {
       setStatus({ type: 'error', message: 'Network error. Please try again.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePayment = async () => {
+    if (!selectedTour) {
+      setStatus({ type: 'error', message: 'Please select a tour first' });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch('/api/payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: selectedTour.price * formData.participants,
+          receipt: `booking_${Date.now()}`,
+          notes: {
+            name: formData.name,
+            phone: formData.phone,
+            tour: selectedTour.name,
+          },
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.onload = () => {
+          const options = {
+            key: data.keyId,
+            amount: data.amount,
+            currency: data.currency,
+            name: 'PackLight Trips',
+            description: selectedTour.name,
+            order_id: data.orderId,
+            handler: async function (response) {
+              setStatus({
+                type: 'success',
+                message: `Payment successful! Payment ID: ${response.razorpay_payment_id}`,
+              });
+            },
+            prefill: {
+              name: formData.name,
+              email: formData.email,
+              contact: formData.phone,
+            },
+            theme: {
+              color: '#16a34a',
+            },
+          };
+          const rzp = new window.Razorpay(options);
+          rzp.open();
+        };
+        document.body.appendChild(script);
+      } else {
+        setStatus({ type: 'error', message: data.error || 'Payment failed' });
+      }
+    } catch {
+      setStatus({ type: 'error', message: 'Payment error. Please try again.' });
     } finally {
       setLoading(false);
     }
@@ -179,6 +260,26 @@ export default function BookingPage() {
             </select>
           </div>
 
+          {/* Price Summary */}
+          {selectedTour && (
+            <div className="bg-primary-50 rounded-xl p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Total Amount</p>
+                  <p className="text-xs text-gray-500">
+                    ₹{selectedTour.price.toLocaleString()} × {formData.participants}{' '}
+                    {formData.participants === 1 ? 'person' : 'people'}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="font-display text-2xl font-bold text-primary-700">
+                    ₹{(selectedTour.price * formData.participants).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Additional Message
@@ -193,13 +294,26 @@ export default function BookingPage() {
             />
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn-primary w-full text-lg disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Submitting...' : 'Submit Booking Request'}
-          </button>
+          <div className="space-y-3">
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-primary w-full text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Submitting...' : 'Submit Booking Request'}
+            </button>
+
+            {selectedTour && (
+              <button
+                type="button"
+                onClick={handlePayment}
+                disabled={loading}
+                className="w-full bg-accent-500 hover:bg-accent-600 text-white font-semibold py-3 px-8 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Processing...' : `Pay ₹${(selectedTour.price * formData.participants).toLocaleString()} Online`}
+              </button>
+            )}
+          </div>
 
           <p className="text-center text-sm text-gray-500">
             By submitting, you agree to be contacted by PackLight Trips via phone, email, or WhatsApp.
@@ -207,5 +321,20 @@ export default function BookingPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function BookingPage() {
+  return (
+    <Suspense fallback={
+      <div className="pt-20 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-4xl mb-4">⏳</div>
+          <p className="text-gray-600">Loading booking form...</p>
+        </div>
+      </div>
+    }>
+      <BookingForm />
+    </Suspense>
   );
 }
