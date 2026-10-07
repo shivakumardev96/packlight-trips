@@ -127,6 +127,8 @@ function BookingForm() {
           rzp.open();
         };
         document.body.appendChild(script);
+      } else if (data.fallback) {
+        setStatus({ type: 'info', message: data.error });
       } else {
         setStatus({ type: 'error', message: data.error || 'Payment failed' });
       }

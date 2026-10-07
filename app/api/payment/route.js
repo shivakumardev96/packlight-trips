@@ -1,8 +1,4 @@
 import { NextResponse } from 'next/server';
-import crypto from 'crypto';
-
-const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID || 'rzp_test_1234567890';
-const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || 'test_secret';
 
 export async function POST(request) {
   try {
@@ -16,9 +12,22 @@ export async function POST(request) {
       );
     }
 
-    // Create Razorpay order
+    const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID;
+    const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
+
+    if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Online payment is not configured yet. Please book via WhatsApp instead.',
+          fallback: true,
+        },
+        { status: 200 }
+      );
+    }
+
     const orderData = {
-      amount: amount * 100, // Razorpay expects amount in paise
+      amount: amount * 100,
       currency,
       receipt: receipt || `order_${Date.now()}`,
       notes,
