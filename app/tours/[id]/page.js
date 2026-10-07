@@ -48,8 +48,43 @@ export default async function TourDetailPage({ params }) {
     Difficult: 'bg-red-100 text-red-700',
   };
 
+  const tourJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'TouristTrip',
+    name: tour.name,
+    description: tour.description,
+    image: tour.image,
+    provider: {
+      '@type': 'TravelAgency',
+      name: 'PackLight Trips',
+      url: 'https://packlight-trips.vercel.app',
+    },
+    offers: {
+      '@type': 'Offer',
+      price: tour.price,
+      priceCurrency: 'INR',
+      availability: tour.spotsLeft && tour.spotsLeft <= 5 ? 'https://schema.org/LimitedAvailability' : 'https://schema.org/InStock',
+    },
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: tour.rating,
+      reviewCount: tour.reviews,
+    },
+    location: {
+      '@type': 'Place',
+      name: tour.location,
+    },
+    touristType: tour.category,
+  };
+
   return (
     <div className="pt-16 md:pt-20">
+      {/* Schema Markup for Tour */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(tourJsonLd) }}
+      />
+
       {/* Hero Image */}
       <section className="relative h-[50vh] min-h-[400px] overflow-hidden">
         <img
@@ -229,7 +264,9 @@ export default async function TourDetailPage({ params }) {
             <div className="lg:col-span-1">
               <div className="sticky top-24 bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
                 <div className="text-center mb-6">
-                  <div className="text-sm text-gray-500 line-through">₹{tour.originalPrice.toLocaleString()}</div>
+                  {tour.originalPrice && (
+                    <div className="text-sm text-gray-500 line-through">₹{tour.originalPrice.toLocaleString()}</div>
+                  )}
                   <div className="font-display text-3xl font-bold text-gray-900">₹{tour.price.toLocaleString()}</div>
                   <div className="text-sm text-gray-500">per person</div>
                 </div>
